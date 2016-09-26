@@ -1,5 +1,15 @@
-var app = require('app');  // Module to control application life.
-var BrowserWindow = require('browser-window');  // Module to create native browser window.
+"use strict";
+
+const app = require('app');  // Module to control application life.
+const BrowserWindow = require('browser-window');  // Module to create native browser window.
+const ipcMain = require('electron').ipcMain;
+
+let state = {
+    simple: "JSON/simple.json",
+    england: "JSON/england.json",
+    wales: "JSON/wales.json",
+    activeMap: "JSON/simple.json"
+};
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -23,6 +33,11 @@ app.on('ready', function() {
     // and load the index.html of the app.
     mainWindow.loadURL('file://' + __dirname + '/index.html');
 
+    // Open the DevTools.
+    mainWindow.webContents.openDevTools();
+
+    mainWindow.maximize();
+
     // Emitted when the window is closed.
     mainWindow.on('closed', function() {
         // Dereference the window object, usually you would store windows
@@ -31,3 +46,13 @@ app.on('ready', function() {
         mainWindow = null;
     });
 });
+
+ipcMain.on('toggle-map', (event, arg) => {
+    if(state.activeMap === "england.json"){
+        state.activeMap = state.wales;
+    }
+    else{
+        state.activeMap = state.england;
+    }
+    event.sender.send('load-data', state.activeMap);
+})

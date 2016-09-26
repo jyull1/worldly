@@ -1,0 +1,18 @@
+**********************************************
+WORLDLY OFFICIAL PROJECT STRUCTURE
+**********************************************
+*app
+//Contains most content relevant to the app, including assets & webpages.
+	*css
+	*json
+	//Data associated with GeoJSON data structures
+	*js
+	//Data-processing and drawing applications go here.
+	*index.html
+	//Default webpage, containing a div for D3 to target.
+*main.js
+//System-wide window manager
+*node_modules
+//Place for imports and exterior libraries.
+*package.json
+//Contains application metadata and config
