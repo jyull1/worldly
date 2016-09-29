@@ -8,6 +8,10 @@ WORLDLY OFFICIAL PROJECT STRUCTURE
 	//Data associated with GeoJSON data structures
 	*js
 	//Data-processing and drawing applications go here.
+		*windows
+		//Specific .js files for each window, responsible for attaching appropriate event handlers.
+		*DataManager.js
+		//Library of functions designed to manipulate GeoJSON object data in state.
 	*index.html
 	//Default webpage, containing a div for D3 to target.
 *main.js

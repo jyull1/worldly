@@ -5,10 +5,7 @@ const BrowserWindow = require('browser-window');  // Module to create native bro
 const ipcMain = require('electron').ipcMain;
 
 let state = {
-    simple: "JSON/simple.json",
-    england: "JSON/england.json",
-    wales: "JSON/wales.json",
-    activeMap: "JSON/simple.json"
+
 };
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -31,7 +28,7 @@ app.on('ready', function() {
     mainWindow = new BrowserWindow({width: 900, height: 600});
 
     // and load the index.html of the app.
-    mainWindow.loadURL('file://' + __dirname + '/index.html');
+    mainWindow.loadURL('file://' + __dirname + '/app/index.html');
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
@@ -46,13 +43,3 @@ app.on('ready', function() {
         mainWindow = null;
     });
 });
-
-ipcMain.on('toggle-map', (event, arg) => {
-    if(state.activeMap === "england.json"){
-        state.activeMap = state.wales;
-    }
-    else{
-        state.activeMap = state.england;
-    }
-    event.sender.send('load-data', state.activeMap);
-})
