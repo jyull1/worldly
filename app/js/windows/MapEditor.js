@@ -3,19 +3,25 @@ const 	d3 = require('d3'),
 
 var state = {
 	mode: 'ADD_VERTEX_EXISTING',
-	bgColor: '#abcdef'
+	bgColor: '#bbbbff'
 };
+
+const path = d3.geoPath();
 
 var svg = d3.select("#chart")
 			.append('svg')
 				.attr('width', 900)
 				.attr('height', 900)
-				.style('background', '#abcdef')
+				.style('background', state.bgColor)
 				.on('click', processClick);
 
 var newMapButton = d3.select('#newMap');
+var closePolyButton = d3.select('#closePoly');
+var newLineButton = d3.select('#newPoly');
 
-newMapButton.on('click', DataManager.newMap);
+newMapButton.on('click', newMap);
+closePolyButton.on('click', closePoly);
+newLineButton.on('click', newLineString)
 
 /**
 Processes clicks on the SVG based on the state's mode variable
@@ -45,12 +51,21 @@ function refresh(){
         .style('background', state.bgColor)
         .on('click', processClick);
 
-    console.log(DataManager.getData())
+    svg.selectAll('path')
+        .data(DataManager.getData().geo.features)
+        .enter()
+        .append('path')
+            .attr('d', path)
+            .style('fill', '#000000')
+            .style('fill-opacity', 0.0)
+            .style('stroke-width', 2)
+            .style('stroke', '#000000')
+            .style('stroke-linejoin', 'round');
 
     switch(state.mode){
     	case 'ADD_VERTEX_EXISTING':
     		svg.selectAll('circle')
-    			.data(DataManager.getData().geo.coordinates[0])
+    			.data(DataManager.getData().geo.features[DataManager.getCurrent()].geometry.coordinates)
     			.enter()
     			.append('circle')
     				.attr('r', 5)
@@ -61,11 +76,38 @@ function refresh(){
     						return d[1];
     					})
     				.attr('fill', '#000000');
-    				break;
+
+    		break;
     	default: return;
     }
 }
 
+/**
+Handles New Map Creation & refreshes the SVG
+*/
+function newMap(){
+    DataManager.newMap();
+    state.mode = 'ADD_VERTEX_EXISTING';
+    refresh();
+}
+
+/**
+Handles closing of the in-progress polygon and alters the state to prevent drawing vertices
+*/
+function closePoly(){
+    state.mode = 'DEFAULT_RESTING';
+    DataManager.lineToPoly();
+    refresh();
+}
+
+/**
+Adds a new LineString(to be turned into a polygon) to the map's Feature collection
+*/
+function newLineString(){
+    state.mode = 'ADD_VERTEX_EXISTING';
+    DataManager.newLineString();
+    refresh();
+}
 /********
 
 /**

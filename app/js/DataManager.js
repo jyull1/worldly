@@ -16,30 +16,70 @@ module.exports = {
 	addPoint: function(x, y, newPolygon){
 		//If the vertex belongs to a new polygon within the geoJSON object
 		if(newPolygon){
-			liveData.geo.coordinates.push([[x, y]]);
+			liveData.geo.features[liveData.currentFeature].geometry.coordinates.push([[x, y]]);
 		}
 		else{
-			liveData.geo.coordinates[0].push([x, y]);
+			liveData.geo.features[liveData.currentFeature].geometry.coordinates.push([x, y]);
 		}
 	},
 
+	/**
+	Returns the index of the feature currently being edited in the feature collection
+	*/
+	getCurrent: function(){
+		return liveData.currentFeature;
+	},
+
 	/*
-		Returns the map's data object to the frontend.
+	Returns the map's data object to the frontend.
 	*/
 	getData: function(){
 		return liveData;
 	},
 
 	/**
+	Converts a linestring(i.e. unfinished polygon) into a closed polygon.
+		lineString (Object) A geoJSON Feature object of type LineString.
+	*/
+	lineToPoly: function(lineString){
+		liveData.geo.features[liveData.currentFeature].geometry.type = 'Polygon';
+		//D3 ignores the final coordinate of a coordinate array. Thus, a blank is thrown at the end to prevent drawing inaccuracies.
+		liveData.geo.features[liveData.currentFeature].geometry.coordinates.push([]);
+		liveData.geo.features[liveData.currentFeature].geometry.coordinates = [liveData.geo.features[liveData.currentFeature].geometry.coordinates];
+	},
+
+	/**
+	Adds a new LineString object to the geoJSON object's feature array
+	*/
+	newLineString: function(){
+		var lineString = {
+			type: 'Feature',
+			geometry: {
+				type: 'LineString',
+				coordinates: []
+			}
+		}
+		liveData.geo.features.push(lineString);
+		liveData.currentFeature = liveData.geo.features.indexOf(lineString);
+	},
+	/**
 	Returns a blank polygon object for a new map. 
 	*/
 	newMap: function(){
 		liveData = {
+			//Index of the current feature being edited
+			currentFeature: 0,
 			//A wrapper for the geoJSON object. Worldly-specific metadata must be stored outside of geo.
 			geo: {
-				type: "Polygon",
-				coordinates: [
-					[]
+				type: "FeatureCollection",
+				features: [
+					{
+						type: 'Feature',
+						geometry: {
+							type: 'LineString',
+							coordinates: []
+						}
+					}
 				]
 			}			
 		}
