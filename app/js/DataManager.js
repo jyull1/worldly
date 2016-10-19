@@ -1,4 +1,5 @@
-const d3 = require('d3');
+const 	d3 = require('d3'),
+		fs = require('fs');
 
 //The data object containing all information for the map in memory.
 //Documents attached to the map are represented by string URLs.
@@ -83,6 +84,14 @@ module.exports = {
 				]
 			}			
 		}
+	},
+
+	/**
+	Saves map to a text document
+	*/
+	save: function(){
+		var dataString = JSON.stringify(liveData);
+		fs.writeFile('app/json/saveData.txt', dataString);
 	}
 
 }

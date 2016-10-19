@@ -1,0 +1,1 @@
+{"currentFeature":0,"geo":{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[446,250.1875],[750,558.1875],[303,632.1875],[269,448.1875],[297,359.1875],[458,347.1875],[]]]}}]}}

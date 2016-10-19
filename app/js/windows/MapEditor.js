@@ -18,10 +18,12 @@ var svg = d3.select("#chart")
 var newMapButton = d3.select('#newMap');
 var closePolyButton = d3.select('#closePoly');
 var newLineButton = d3.select('#newPoly');
+var saveButton = d3.select('#save');
 
 newMapButton.on('click', newMap);
 closePolyButton.on('click', closePoly);
-newLineButton.on('click', newLineString)
+newLineButton.on('click', newLineString);
+saveButton.on('click', saveMap);
 
 /**
 Processes clicks on the SVG based on the state's mode variable
@@ -107,6 +109,13 @@ function newLineString(){
     state.mode = 'ADD_VERTEX_EXISTING';
     DataManager.newLineString();
     refresh();
+}
+
+/**
+Calls the saving function in DataManager
+*/
+function saveMap(){
+    DataManager.save();
 }
 /********
 
