@@ -3,7 +3,8 @@ const 	d3 = require('d3'),
 
 var state = {
 	mode: 'ADD_VERTEX_EXISTING',
-	bgColor: '#bbbbff'
+	bgColor: '#bbbbff',
+    filePath: 'app/json/saveData.txt'
 };
 
 const path = d3.geoPath();
@@ -19,11 +20,13 @@ var newMapButton = d3.select('#newMap');
 var closePolyButton = d3.select('#closePoly');
 var newLineButton = d3.select('#newPoly');
 var saveButton = d3.select('#save');
+var loadButton = d3.select('#load');
 
 newMapButton.on('click', newMap);
 closePolyButton.on('click', closePoly);
 newLineButton.on('click', newLineString);
 saveButton.on('click', saveMap);
+loadButton.on('click', loadMap);
 
 /**
 Processes clicks on the SVG based on the state's mode variable
@@ -116,6 +119,14 @@ Calls the saving function in DataManager
 */
 function saveMap(){
     DataManager.save();
+}
+
+/**
+Calls the loading function in DataManager
+*/
+function loadMap(){
+    state.mode = 'DEFAULT_RESTING';
+    DataManager.loadFromFile(state.filePath, refresh.bind(this));
 }
 /********
 

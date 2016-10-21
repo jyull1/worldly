@@ -50,6 +50,23 @@ module.exports = {
 	},
 
 	/**
+	Loads a file containing JSON in worldly's map data format, using the location of the package.json as the root
+		path (String)	The directory path of the data file, relative to index.html
+		callback (Function)	Usually a call to MapEditor's refresh method; a function to be run after the data is loaded.
+	*/
+	loadFromFile: function(path, callback){
+		fs.readFile(path, 'utf8', function(err, data){
+			if(err){
+				console.log(err);
+				return;
+			}
+			//data is the string returned by fs's readFile function.
+			liveData = JSON.parse(data);
+			callback();
+		})
+	},
+
+	/**
 	Adds a new LineString object to the geoJSON object's feature array
 	*/
 	newLineString: function(){

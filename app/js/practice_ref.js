@@ -66,7 +66,7 @@ function draw(){
 
     //Draws geometry to the svg
     svg.append("path")
-          .data(state.data)
+          .datum(state.data)
           .attr("d", path);
 }
 
