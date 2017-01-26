@@ -18,13 +18,11 @@ var svg = d3.select("#chart")
 
 var newMapButton = d3.select('#newMap');
 var closePolyButton = d3.select('#closePoly');
-var newLineButton = d3.select('#newPoly');
 var saveButton = d3.select('#save');
 var loadButton = d3.select('#load');
 
 newMapButton.on('click', newMap);
 closePolyButton.on('click', closePoly);
-newLineButton.on('click', newLineString);
 saveButton.on('click', saveMap);
 loadButton.on('click', loadMap);
 
@@ -56,6 +54,7 @@ function refresh(){
         .style('background', state.bgColor)
         .on('click', processClick);
 
+    //Draw completed polygons
     svg.selectAll('path')
         .data(DataManager.getData().geo.features)
         .enter()
@@ -65,12 +64,34 @@ function refresh(){
             .style('fill-opacity', 0.0)
             .style('stroke-width', 2)
             .style('stroke', '#000000')
-            .style('stroke-linejoin', 'round');
+            .style('stroke-linejoin', 'round')
+            .on('mouseover', function(){
+                if(true){
+                    d3.select(this)
+                        .style('fill-opacity', 0.5);
+                }
+            })
+            .on('mouseout', function(){
+                d3.select(this)
+                    .style('fill-opacity', 0.0);
+            });
 
+    //Draw the current polygon
+    svg.selectAll('path')
+        .data([DataManager.getCurrent()])
+        .enter()
+        .append('path')
+            .attr('d', path)
+            .style('fill', '#000000')
+            .style('fill-opacity', 0.0)
+            .style('stroke-width', 2)
+            .style('stroke', '#000000')
+            .style('stroke-linejoin', 'round');
+            
     switch(state.mode){
     	case 'ADD_VERTEX_EXISTING':
     		svg.selectAll('circle')
-    			.data(DataManager.getData().geo.features[DataManager.getCurrent()].geometry.coordinates)
+    			.data(DataManager.getCurrent().geometry.coordinates)
     			.enter()
     			.append('circle')
     				.attr('r', 5)
@@ -100,8 +121,8 @@ function newMap(){
 Handles closing of the in-progress polygon and alters the state to prevent drawing vertices
 */
 function closePoly(){
-    state.mode = 'DEFAULT_RESTING';
     DataManager.lineToPoly();
+    DataManager.newLineString();
     refresh();
 }
 
@@ -125,7 +146,6 @@ function saveMap(){
 Calls the loading function in DataManager
 */
 function loadMap(){
-    state.mode = 'DEFAULT_RESTING';
     DataManager.loadFromFile(state.filePath, refresh.bind(this));
 }
 /********
@@ -133,13 +153,7 @@ function loadMap(){
 /**
 Interprets data for the DataManager call to add a vertex to the map object.
 	coord (Array)	2-member array containing an x and y value.
-	newPolygon (boolean)	Optional boolean indicating whether the vertex will be added as a new polygon.
 */
-function addVertex(coord, newPolygon){
-	if(newPolygon){
-		DataManager.addPoint(coord[0], coord[1], newPolygon);
-	}
-	else{
-		DataManager.addPoint(coord[0], coord[1]);
-	}
+function addVertex(coord){
+	DataManager.addPoint(coord[0], coord[1]);
 }
