@@ -76,17 +76,17 @@ function refresh(){
                     .style('fill-opacity', 0.0);
             });
 
-    //Draw the current polygon
-    svg.selectAll('path')
-        .data([DataManager.getCurrent()])
-        .enter()
-        .append('path')
-            .attr('d', path)
-            .style('fill', '#000000')
-            .style('fill-opacity', 0.0)
-            .style('stroke-width', 2)
-            .style('stroke', '#000000')
-            .style('stroke-linejoin', 'round');
+    // //Draw the current polygon
+    // svg.selectAll('path')
+    //     .data([DataManager.getCurrent()])
+    //     .enter()
+    //     .append('path')
+    //         .attr('d', path)
+    //         .style('fill', '#000000')
+    //         .style('fill-opacity', 0.0)
+    //         .style('stroke-width', 2)
+    //         .style('stroke', '#000000')
+    //         .style('stroke-linejoin', 'round');
             
     switch(state.mode){
     	case 'ADD_VERTEX_EXISTING':

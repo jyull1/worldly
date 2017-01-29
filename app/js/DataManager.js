@@ -1,3 +1,4 @@
+"use strict"
 const 	d3 = require('d3'),
 		fs = require('fs');
 
@@ -29,6 +30,43 @@ module.exports = {
 	*/
 	addPoint: function(x, y){
 		liveData.currentFeature.geometry.coordinates.push([x, y]);
+	},
+
+	/**
+	Adds noise to a Feature object.
+		feature (Obj)	A geoJSON feature object
+		gridX	(int)	The maximum size of the x values to be generated for noise
+		gridY	(int)	The maximum size of the y values to be generated for noise
+	*/
+	addNoise: function(feature, gridX, gridY){
+		for(let i=0; i<feature.geometry.coordinates.length-1;i++){
+			let point0 = feature.geometry.coordinates[i];
+			let point1 = feature.geometry.coordinates[i+1];
+
+			//Generate a random point to insert between point0 and point1
+			//Find a way to determine the centroid of the polygon.
+			//Determine the eligibility of a random point based on the difference in signing between the centroid and random point's determinant of vectors.
+
+		}
+	},
+
+	/**
+	Uses the determinant of vectors of points a & b to determine where point c is in relation to the line between them.
+	Returns a string indicating whether the point is to the left, right, or on the line.
+		a (Array)	An ordered pair of x and y, connected by line segment to b (ex: [1,2])
+		b (Array)	An ordered pair of x and y, connected by line segment to a (ex: [2, 3])
+		c (Array)	An ordered pair of x and y, that is either on or on either side of line segment AB
+	*/
+	determine: function(a, b, c){
+		//Points are converted into objects with keys for ease of reading.
+		let p0, p1, p2;
+		p0 = {x: a[0], y: a[1]};
+		p1 = {x: b[0], y: b[1]};
+		p2 = {x: c[0], y: c[1]};
+
+		let position = (p1.x-p0.x)(p2.y-p0.y)-(p2.x-p0.x)(p1.y-p0.y);
+
+		return position > 0 ? 'left' : position < 0 ? 'right' : 'on';
 	},
 
 	/**
@@ -117,4 +155,8 @@ module.exports = {
 		fs.writeFile('app/json/saveData.txt', dataString);
 	}
 
+};
+
+function randomInt(min, max){
+	return Math.floor(Math.random() * (max-min) + min);
 }
