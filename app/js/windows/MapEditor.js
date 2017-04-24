@@ -1,30 +1,56 @@
 const 	d3 = require('d3'),
-	 	DataManager = require('./js/DataManager.js');
+	 	Map = require('./js/DataManager.js');
+const {remote} = require('electron');
+const {Menu, MenuItem} = remote;
 
 var state = {
 	mode: 'ADD_VERTEX_EXISTING',
-	bgColor: '#bbbbff',
-    filePath: 'app/json/saveData.txt'
+	bgColor: '#0077BE',
+    landColor: '#2C9800',
+    lineColor: '#172500',
+    filePath: 'app/json/saveData.txt',
+    mapWidth: 1800,
+    mapHeight: 900
 };
 
-const path = d3.geoPath();
+firstDraw();
 
-var svg = d3.select("#chart")
-			.append('svg')
-				.attr('width', 900)
-				.attr('height', 900)
-				.style('background', state.bgColor)
-				.on('click', processClick);
+let map = new Map();
 
 var newMapButton = d3.select('#newMap');
 var closePolyButton = d3.select('#closePoly');
 var saveButton = d3.select('#save');
 var loadButton = d3.select('#load');
+var noiseButton = d3.select("#noise");
 
 newMapButton.on('click', newMap);
 closePolyButton.on('click', closePoly);
 saveButton.on('click', saveMap);
 loadButton.on('click', loadMap);
+noiseButton.on('click', noise);
+
+// //Sets up Save & Load menu options
+// let menu = Menu.getApplicationMenu();
+// let dataMenu = new MenuItem({
+//     label: "File",
+//     submenu: [
+//         {
+//             label: "Save",
+//             click: saveMap
+//         },
+//         {
+//             label: "Load",
+//             click: loadMap
+//         },
+//         {
+//             label: "Exit",
+//             role: "quit"
+//         }
+//     ]
+// });
+// //menu.insert(0, dataMenu)
+// Menu.setApplicationMenu(menu);
+
 
 /**
 Processes clicks on the SVG based on the state's mode variable
@@ -39,99 +65,150 @@ function processClick(){
 	}
 }
 
+function firstDraw(){
+    //Clears draw space
+    d3.select("svg").remove();
+
+    let svg = d3.select("#chart")
+        .append('svg')
+            .attr('width', state.mapWidth)
+            .attr('height', state.mapHeight)
+            .style('background', state.bgColor)
+            .on('click', processClick)
+            .on('contextmenu', closeCurrent);
+}
+
 /**
 Updates the SVG by fetching the DataManager copy of the object.
 */
 function refresh(){
     //Clears draw space
-    d3.select("svg").remove();
+    d3.selectAll("path").remove();
 
    //Creates an SVG for my map to live in
-    var svg = d3.select("#chart")
-        .append("svg")
-        .attr("width", 900)
-        .attr("height", 900)
-        .style('background', state.bgColor)
-        .on('click', processClick);
+    let svg = d3.select("svg");
 
     //Draw completed polygons
-    svg.selectAll('path')
-        .data(DataManager.getData().geo.features)
+    svg.selectAll('#complete')
+        .data(map.getData().geo.features)
         .enter()
         .append('path')
-            .attr('d', path)
-            .style('fill', '#000000')
-            .style('fill-opacity', 0.0)
+            .attr('d', d3.geoPath())
+            .attr('id', (d) => {
+                return d.id;
+            })
+            .attr("class", "complete")
+            .attr('fill-rule', 'evenodd')
+            .style('fill', state.landColor)
+            .style('fill-opacity', 0.5)
             .style('stroke-width', 2)
-            .style('stroke', '#000000')
+            .style('stroke', state.lineColor)
             .style('stroke-linejoin', 'round')
             .on('mouseover', function(){
                 if(true){
                     d3.select(this)
-                        .style('fill-opacity', 0.5);
+                        .style('fill-opacity', 1);
                 }
             })
             .on('mouseout', function(){
                 d3.select(this)
-                    .style('fill-opacity', 0.0);
-            });
+                    .style('fill-opacity', 0.5);
+            })
+            .on('click', function(){
+                setCurrent(d3.select(this).attr("id"));
+            })
+            .lower();
 
-    // //Draw the current polygon
-    // svg.selectAll('path')
-    //     .data([DataManager.getCurrent()])
-    //     .enter()
-    //     .append('path')
-    //         .attr('d', path)
-    //         .style('fill', '#000000')
-    //         .style('fill-opacity', 0.0)
-    //         .style('stroke-width', 2)
-    //         .style('stroke', '#000000')
-    //         .style('stroke-linejoin', 'round');
-            
-    switch(state.mode){
-    	case 'ADD_VERTEX_EXISTING':
-    		svg.selectAll('circle')
-    			.data(DataManager.getCurrent().geometry.coordinates)
-    			.enter()
-    			.append('circle')
-    				.attr('r', 5)
-    				.attr('cx', function(d){
-    						return d[0];
-    					})
-    				.attr('cy', function(d){
-    						return d[1];
-    					})
-    				.attr('fill', '#000000');
+    //Draw the current polygon
+    svg.selectAll('#incomplete')
+        .data([map.getCurrent()])
+        .enter()
+        .append('path')
+            .attr('id', (d) => {
+                return d.id
+            })
+            .attr("class", "incomplete")
+            .attr('d', d3.geoPath())
+            .style('fill', state.landColor)
+            .style('fill-opacity', 1)
+            .style('stroke-width', 2)
+            .style('stroke', state.lineColor)
+            .style('stroke-linejoin', 'round')
+            .lower();
 
-    		break;
-    	default: return;
-    }
+    return svg;
+}
+
+function refreshAllCircles(){
+    d3.selectAll("circle").remove();
+    let svg = d3.select("svg");
+
+    svg.selectAll('circle')
+                .data(prepForEdit(map.getCurrent().geometry.coordinates[0]))
+                .enter()
+                .append('circle')
+                    .attr('r', 5)
+                    .attr('cx', function(d){
+                            return d[0];
+                        })
+                    .attr('cy', function(d){
+                            return d[1];
+                        })
+                    .attr('id', function(d, i){
+                        return i;
+                    })
+                    .attr('fill', state.lineColor)
+                    .call(d3.drag().on("start", started));
+}
+
+function closeCurrent(){
+    map.closeCurrent();
+    refresh();
+}
+
+function drawCircle(svg, x, y, id){
+    svg.append('circle')
+        .attr('r', 5)
+        .attr('cx', x)
+        .attr('cy', y)
+        .attr('id', id)
+        .attr('fill', state.lineColor)
+        .call(d3.drag().on("start", started));
 }
 
 /**
 Handles New Map Creation & refreshes the SVG
 */
 function newMap(){
-    DataManager.newMap();
-    state.mode = 'ADD_VERTEX_EXISTING';
+    map.newMap();
+    firstDraw();
+}
+
+/**
+Adds noise to all completed polygons.
+*/
+function noise(){
+    map.addNoiseAll();
     refresh();
+    refreshAllCircles();
 }
 
 /**
 Handles closing of the in-progress polygon and alters the state to prevent drawing vertices
 */
 function closePoly(){
-    DataManager.lineToPoly();
-    DataManager.newLineString();
+    map.lineToPoly();
+    newLineString();
     refresh();
+    refreshAllCircles();
 }
 
 /**
 Adds a new LineString(to be turned into a polygon) to the map's Feature collection
 */
 function newLineString(){
-    state.mode = 'ADD_VERTEX_EXISTING';
-    DataManager.newLineString();
+    map.newLineString();
+    refreshAllCircles();
     refresh();
 }
 
@@ -139,14 +216,51 @@ function newLineString(){
 Calls the saving function in DataManager
 */
 function saveMap(){
-    DataManager.save();
+    map.save();
+}
+
+/**
+Called when an element is clicked, this will be called in the context of the clicked element.
+*/
+function setCurrent(id){
+    map.setCurrent(id);
+    refresh();
+    refreshAllCircles();
+}
+
+/**
+Handles drag events on circle elements
+*/
+function started() {
+  var circle = d3.select(this).classed("dragging", true);
+  var currentShape = map.getCurrent().geometry.coordinates[0];
+  currentShape.pop();
+
+  d3.event.on("drag", dragged).on("end", ended);
+
+  function dragged(d) {
+    newX = d3.event.x;
+    newY = d3.event.y;
+    circle.attr("cx", newX).attr("cy", newY);
+    currentShape[circle.attr("id")][0] = newX;
+    currentShape[circle.attr("id")][1] = newY;
+
+    refresh();
+  }
+
+  function ended() {
+    circle.classed("dragging", false);
+    refresh();
+  }
+
+  currentShape.push(currentShape[currentShape.length-1]);
 }
 
 /**
 Calls the loading function in DataManager
 */
 function loadMap(){
-    DataManager.loadFromFile(state.filePath, refresh.bind(this));
+    map.loadFromFile(state.filePath, refresh.bind(this));
 }
 /********
 
@@ -155,5 +269,11 @@ Interprets data for the DataManager call to add a vertex to the map object.
 	coord (Array)	2-member array containing an x and y value.
 */
 function addVertex(coord){
-	DataManager.addPoint(coord[0], coord[1]);
+	let id = map.addPoint(coord[0], coord[1]);
+    let svg = refresh();
+    drawCircle(svg, coord[0], coord[1], id);
+}
+
+function prepForEdit(arr){
+    return arr.slice(0, arr.length-1);
 }
