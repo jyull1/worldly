@@ -9,7 +9,7 @@ var state = {
     landColor: '#2C9800',
     lineColor: '#172500',
     filePath: 'app/json/saveData.txt',
-    mapWidth: 1800,
+    mapWidth: 1500,
     mapHeight: 900
 };
 
@@ -22,12 +22,14 @@ var closePolyButton = d3.select('#closePoly');
 var saveButton = d3.select('#save');
 var loadButton = d3.select('#load');
 var noiseButton = d3.select("#noise");
+var zonebutton = d3.select("#subsection")
 
 newMapButton.on('click', newMap);
 closePolyButton.on('click', closePoly);
 saveButton.on('click', saveMap);
 loadButton.on('click', loadMap);
 noiseButton.on('click', noise);
+zonebutton.on('click', toggleMode)
 
 // //Sets up Save & Load menu options
 // let menu = Menu.getApplicationMenu();
@@ -61,6 +63,9 @@ function processClick(){
 			addVertex(d3.mouse(this));
 			refresh();
 			break;
+        case 'SUBSECTION':
+            splitOff(d3.mouse(this));
+            refresh();
 		default: return;
 	}
 }
@@ -115,7 +120,14 @@ function refresh(){
                     .style('fill-opacity', 0.5);
             })
             .on('click', function(){
-                setCurrent(d3.select(this).attr("id"));
+                switch(state.mode){
+                    case 'ADD_VERTEX_EXISTING':
+                        setCurrent(d3.select(this).attr("id"));
+                        break;
+                    case 'SUBSECTION':
+                        console.log("Subsection behavior not defined.")
+                    default: return;
+                }
             })
             .lower();
 
@@ -262,7 +274,19 @@ Calls the loading function in DataManager
 function loadMap(){
     map.loadFromFile(state.filePath, refresh.bind(this));
 }
-/********
+
+function toggleMode(){
+    if(state.mode == "ADD_VERTEX_EXISTING"){
+        state.mode = "SUBSECTION"
+    }
+    else{
+        state.mode = "ADD_VERTEX_EXISTING"
+    }
+}
+
+function splitOff(coord){
+    console.log(coord);
+}
 
 /**
 Interprets data for the DataManager call to add a vertex to the map object.
